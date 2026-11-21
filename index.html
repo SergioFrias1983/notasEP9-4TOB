@@ -63,6 +63,14 @@
   .nota.vacio { background: var(--empty); border-color: #f6d3ae; }
   .nota.vacio .v { color: var(--empty-text); }
   .nota.bajo .v { color: var(--low); }
+  .promedio { display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid #bcd0e6; background: var(--name-bg); border-radius: 10px;
+    padding: 10px 14px; margin-bottom: 10px; }
+  .promedio .et { font-weight: 600; font-size: 1rem; }
+  .promedio .v { font-size: 1.6rem; font-weight: 800; color: var(--head); }
+  .promedio.bajo .v { color: var(--low); }
+  .promedio.vacio { background: var(--empty); border-color: #f6d3ae; }
+  .promedio.vacio .v { color: var(--empty-text); }
   .pie { margin-top: 10px; font-size: .95rem; color: var(--muted); text-align: center; }
   .pie b { color: var(--text); }
 
@@ -83,6 +91,8 @@
   thead th.nombre { z-index: 3; }
   td.vacio { background: var(--empty); color: var(--empty-text); }
   td.bajo { color: var(--low); font-weight: 700; }
+  td.prom { font-weight: 700; background: #e3ecf6; border-right: 1px solid var(--line); }
+  td.prom.vacio { background: var(--empty); }
   @media (min-width: 700px) {
     th.nombre, td.nombre { width: auto; min-width: 240px; max-width: 340px; }
     #lista { max-width: 640px; margin: 0 auto; }
@@ -126,7 +136,10 @@
 const CONFIG = {
   id: "11joT9YMmrB6d1P9G0AuuuGsetXjmdX57oczMDH7Xa7M", // ID de la planilla (lo que va entre /d/ y /edit en el link)
   hoja: "3erTRIM",                                   // nombre de la pestaña
-  columnas: "D,J,K,L,M,N,O,P,Q",                     // columna del nombre primero, después las notas
+  nombre: "D",                                       // columna del nombre
+  promedio: "G",                                     // columna del promedio (Nota de carpeta). Dejar "" si no hay
+  tituloPromedio: "Nota de carpeta",
+  columnas: "J,K,L,M,N,O,P,Q",                       // columnas de las actividades
   titulo: "4to B – 3er trimestre",
   notaBaja: 6                                        // notas menores a este número se marcan en rojo
 };
@@ -135,6 +148,9 @@ const p = new URLSearchParams(location.search);
 const cfg = {
   id: p.get("id") || CONFIG.id,
   hoja: p.get("hoja") || CONFIG.hoja,
+  nombre: p.get("nombre") || CONFIG.nombre,
+  promedio: p.has("promedio") ? p.get("promedio") : CONFIG.promedio,
+  tituloPromedio: p.get("tituloPromedio") || CONFIG.tituloPromedio,
   columnas: p.get("columnas") || CONFIG.columnas,
   titulo: p.get("titulo") || CONFIG.titulo,
   notaBaja: Number(p.get("notaBaja") || CONFIG.notaBaja)
@@ -166,7 +182,7 @@ async function cargar() {
   // headers=1: la fila 1 se usa como encabezado (act01, act02…)
   const url = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(cfg.id) +
     "/gviz/tq?tqx=out:json&headers=1&sheet=" + encodeURIComponent(cfg.hoja) +
-    "&tq=" + encodeURIComponent("select " + cfg.columnas) + "&_=" + Date.now();
+    "&tq=" + encodeURIComponent("select " + [cfg.nombre, cfg.promedio, cfg.columnas].filter(Boolean).join(",")) + "&_=" + Date.now();
 
   try {
     const texto = await (await fetch(url)).text();
@@ -187,7 +203,8 @@ function valor(c) {
 }
 
 function procesar(t) {
-  actividades = t.cols.slice(1).map(col => (col.label || col.id).trim());
+  const desde = cfg.promedio ? 2 : 1;   // columnas de actividades empiezan después del nombre (y del promedio)
+  actividades = t.cols.slice(desde).map(col => (col.label || col.id).trim());
   alumnos = [];
   // slice(1): se saltea la fila 2 de la planilla
   t.rows.slice(1).forEach(r => {
@@ -197,7 +214,8 @@ function procesar(t) {
     alumnos.push({
       nombre,
       clave: sinTildes(nombre),
-      notas: actividades.map((et, i) => ({ et, v: valor(c[i + 1]) }))
+      promedio: cfg.promedio ? valor(c[1]) : null,
+      notas: actividades.map((et, i) => ({ et, v: valor(c[i + desde]) }))
     });
   });
 }
@@ -247,6 +265,14 @@ function armarLista() {
     const pie = document.createElement("div");
     pie.className = "pie";
     pie.innerHTML = "Entregó <b>" + entregadas + "</b> de <b>" + a.notas.length + "</b> actividades";
+    if (a.promedio !== null) {
+      const pr = document.createElement("div");
+      pr.className = "promedio" + (a.promedio === "" ? " vacio" : esBaja(a.promedio) ? " bajo" : "");
+      pr.innerHTML = '<span class="et"></span><span class="v"></span>';
+      pr.querySelector(".et").textContent = cfg.tituloPromedio;
+      pr.querySelector(".v").textContent = a.promedio === "" ? "–" : a.promedio;
+      det.append(pr);
+    }
     det.append(grilla, pie);
 
     fila.addEventListener("click", () => alternar(li));
@@ -286,7 +312,8 @@ function alternar(li) {
 function armarTabla() {
   const cab = $("cabecera");
   cab.innerHTML = "";
-  ["Alumno", ...actividades].forEach((t, i) => {
+  const titulos = ["Alumno", ...(cfg.promedio ? ["Carpeta"] : []), ...actividades];
+  titulos.forEach((t, i) => {
     const th = document.createElement("th");
     th.textContent = t;
     if (i === 0) th.className = "nombre";
@@ -301,10 +328,12 @@ function armarTabla() {
     td0.className = "nombre";
     td0.textContent = a.nombre;
     tr.appendChild(td0);
-    a.notas.forEach(n => {
+    const celdas = a.promedio !== null ? [{ v: a.promedio, prom: true }, ...a.notas] : a.notas;
+    celdas.forEach(n => {
       const td = document.createElement("td");
       if (n.v === "") { td.className = "vacio"; td.textContent = "–"; }
       else { td.textContent = n.v; if (esBaja(n.v)) td.className = "bajo"; }
+      if (n.prom) td.classList.add("prom");
       tr.appendChild(td);
     });
     cuerpo.appendChild(tr);
