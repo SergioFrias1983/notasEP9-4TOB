@@ -109,6 +109,7 @@
 <header>
   <h1 id="titulo">Notas</h1>
   <div class="sub" id="sub">Cargando…</div>
+  <div class="sub" id="visitas" hidden></div>
 </header>
 
 <div class="tools">
@@ -145,7 +146,9 @@ const CONFIG = {
   tituloPromedio: "Nota de carpeta",
   columnas: "J,K,L,M,N,O,P,Q",                       // columnas de las actividades
   titulo: "4to B – 3er trimestre",
-  notaBaja: 6                                        // notas menores a este número se marcan en rojo
+  notaBaja: 6,                                       // notas menores a este número se marcan en rojo
+  contador: "https://script.google.com/macros/s/AKfycbx3V67Z9Ri4LLpJzsgfQcsWptr2T6baLGg20tV9JGK0b5NyWaXr2wCjpQmcMR_0UKudiA/exec",                                    // link de la aplicación web de Apps Script (hoja VISTAS). Vacío = sin contador
+  pagina: "4TOB-3erTRIM"                             // nombre con el que se anotan las visitas en la hoja VISTAS
 };
 
 const p = new URLSearchParams(location.search);
@@ -157,7 +160,9 @@ const cfg = {
   tituloPromedio: p.get("tituloPromedio") || CONFIG.tituloPromedio,
   columnas: p.get("columnas") || CONFIG.columnas,
   titulo: p.get("titulo") || CONFIG.titulo,
-  notaBaja: Number(p.get("notaBaja") || CONFIG.notaBaja)
+  notaBaja: Number(p.get("notaBaja") || CONFIG.notaBaja),
+  contador: CONFIG.contador,
+  pagina: p.get("pagina") || (p.get("hoja") ? (p.get("titulo") || p.get("hoja")) : CONFIG.pagina)
 };
 
 const $ = id => document.getElementById(id);
@@ -379,6 +384,19 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && Date.now() - ultimaCarga > 60000) cargar();
 });
 cargar();
+
+/* ---------- Contador de visitas (suma 1 en la hoja VISTAS cada vez que se abre la página) ---------- */
+if (cfg.contador) {
+  fetch(cfg.contador + "?pagina=" + encodeURIComponent(cfg.pagina))
+    .then(r => r.json())
+    .then(d => {
+      if (d && d.visitas != null) {
+        $("visitas").textContent = "👁 " + Number(d.visitas).toLocaleString("es-AR") + " visitas";
+        $("visitas").hidden = false;
+      }
+    })
+    .catch(() => {});
+}
 </script>
 </body>
 </html>
