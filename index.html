@@ -52,7 +52,9 @@
   .fila .res { font-size: .85rem; color: var(--muted); white-space: nowrap; }
   .fila .flecha { color: var(--muted); transition: transform .2s; font-size: .9rem; }
   .fila[aria-expanded="true"] .flecha { transform: rotate(180deg); }
-  .fila[aria-expanded="true"] { background: var(--name-bg); }
+  .fila[aria-expanded="true"] { background: var(--head); color: var(--head-text); }
+  .fila[aria-expanded="true"] .res, .fila[aria-expanded="true"] .flecha { color: #dbe6f2; }
+  #lista li.abierto { border: 2px solid var(--head); box-shadow: 0 4px 14px rgba(47,93,138,.18); }
 
   .detalle { padding: 12px 12px 14px; border-top: 1px solid var(--line); }
   .grilla { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -63,13 +65,15 @@
   .nota.vacio { background: var(--empty); border-color: #f6d3ae; }
   .nota.vacio .v { color: var(--empty-text); }
   .nota.bajo .v { color: var(--low); }
-  .promedio { display: flex; align-items: center; justify-content: space-between;
-    border: 1px solid #bcd0e6; background: var(--name-bg); border-radius: 10px;
-    padding: 10px 14px; margin-bottom: 10px; }
-  .promedio .et { font-weight: 600; font-size: 1rem; }
-  .promedio .v { font-size: 1.6rem; font-weight: 800; color: var(--head); }
+  .promedio { display: flex; align-items: center; gap: 14px;
+    border: 2px solid #e0b100; background: #fff3c4; border-radius: 12px;
+    padding: 10px 14px; margin-bottom: 12px; }
+  .promedio .v { order: -1; min-width: 64px; text-align: center; font-size: 1.8rem;
+    font-weight: 800; color: #1f2328; background: #ffffff; border: 1px solid #e0b100;
+    border-radius: 10px; padding: 4px 10px; }
+  .promedio .et { font-weight: 700; font-size: 1.05rem; color: #6b4e00; }
   .promedio.bajo .v { color: var(--low); }
-  .promedio.vacio { background: var(--empty); border-color: #f6d3ae; }
+  .promedio.vacio { background: var(--empty); border-color: #f0b27a; }
   .promedio.vacio .v { color: var(--empty-text); }
   .pie { margin-top: 10px; font-size: .95rem; color: var(--muted); text-align: center; }
   .pie b { color: var(--text); }
@@ -290,6 +294,7 @@ function armarLista() {
 function abrir(li, desplazar = true) {
   for (const otro of $("lista").children) if (otro !== li) cerrar(otro);
   li.querySelector(".fila").setAttribute("aria-expanded", "true");
+  li.classList.add("abierto");
   li.querySelector(".detalle").hidden = false;
   abierto = li.querySelector(".nom").textContent;
   guardar("abierto", abierto);
@@ -300,6 +305,7 @@ function abrir(li, desplazar = true) {
 }
 function cerrar(li) {
   li.querySelector(".fila").setAttribute("aria-expanded", "false");
+  li.classList.remove("abierto");
   li.querySelector(".detalle").hidden = true;
 }
 function alternar(li) {
