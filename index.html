@@ -137,7 +137,7 @@
 
 <script>
 /* Versión de la página: se cambia en cada actualización */
-const VERSION = "1.7";
+const VERSION = "1.8";
 const FECHA_VERSION = "21/11/2026";
 
 /* ===================== CONFIGURACIÓN =====================
@@ -381,7 +381,11 @@ function filtrar() {
 }
 
 $("buscar").addEventListener("input", filtrar);
-$("recargar").addEventListener("click", () => cargar());
+$("recargar").addEventListener("click", () => {
+  cargar();
+  // Registra el toque en "Actualizar notas" en la hoja VISTAS (renglón aparte)
+  if (cfg.contador) fetch(cfg.contador + "?pagina=" + encodeURIComponent(cfg.pagina + " · Actualizar notas")).catch(() => {});
+});
 $("cambiarVista").addEventListener("click", () => {
   vista = vista === "tabla" ? "tarjetas" : "tabla";
   guardar("vista", vista);
