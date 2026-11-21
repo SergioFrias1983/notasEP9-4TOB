@@ -57,7 +57,7 @@
 
 <div class="tools">
   <input id="buscar" type="search" placeholder="Buscar alumno…" autocomplete="off">
-  <button id="recargar" type="button">↻</button>
+  <button id="recargar" type="button">↻ Actualizar notas</button>
 </div>
 
 <div class="wrap">
@@ -173,7 +173,14 @@ function filtrar() {
 }
 
 $("buscar").addEventListener("input", filtrar);
-$("recargar").addEventListener("click", cargar);
+$("recargar").addEventListener("click", () => cargar());
+// Recarga sola al volver a la pestaña o a la app (si pasó más de 1 minuto)
+let ultimaCarga = 0;
+const _cargar = cargar;
+cargar = async () => { ultimaCarga = Date.now(); await _cargar(); };
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && Date.now() - ultimaCarga > 60000) cargar();
+});
 cargar();
 </script>
 </body>
