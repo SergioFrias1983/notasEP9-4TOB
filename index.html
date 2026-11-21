@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notas</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1f2328;
+    --muted: #6b7280;
+    --line: #e3e6ea;
+    --head: #2f5d8a;
+    --head-text: #ffffff;
+    --name-bg: #eef3f9;
+    --empty: #fdebd8;
+    --empty-text: #b45309;
+    --low: #c2410c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 14px 14px 8px; }
+  h1 { font-size: 1.15rem; margin: 0 0 4px; }
+  .sub { font-size: .8rem; color: var(--muted); }
+  .tools { display: flex; gap: 8px; padding: 0 14px 10px; }
+  #buscar { flex: 1; font-size: 1rem; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 10px; background: var(--card); }
+  button { font-size: .95rem; padding: 10px 14px; border: 0; border-radius: 10px;
+    background: var(--head); color: var(--head-text); }
+  .wrap { margin: 0 8px 16px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; overflow: auto; max-height: calc(100vh - 140px);
+    -webkit-overflow-scrolling: touch; }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: .95rem; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: center;
+    white-space: nowrap; }
+  thead th { position: sticky; top: 0; z-index: 2; background: var(--head);
+    color: var(--head-text); font-weight: 600; font-size: .85rem; }
+  th.nombre, td.nombre { position: sticky; left: 0; text-align: left; z-index: 1;
+    max-width: 46vw; white-space: normal; line-height: 1.2; }
+  td.nombre { background: var(--name-bg); font-weight: 500;
+    border-right: 1px solid var(--line); }
+  thead th.nombre { z-index: 3; }
+  td.vacio { background: var(--empty); color: var(--empty-text); }
+  td.bajo { color: var(--low); font-weight: 700; }
+  tbody tr:nth-child(even) td:not(.nombre):not(.vacio) { background: #fafbfc; }
+  .estado { padding: 24px 14px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="titulo">Notas</h1>
+  <div class="sub" id="sub">Cargando…</div>
+</header>
+
+<div class="tools">
+  <input id="buscar" type="search" placeholder="Buscar alumno…" autocomplete="off">
+  <button id="recargar" type="button">↻</button>
+</div>
+
+<div class="wrap">
+  <div class="estado" id="estado">Cargando notas…</div>
+  <table id="tabla" hidden>
+    <thead><tr id="cabecera"></tr></thead>
+    <tbody id="cuerpo"></tbody>
+  </table>
+</div>
+
+<script>
+/* ===================== CONFIGURACIÓN =====================
+   Para usar esta página con otra planilla, cambiá estos valores,
+   o abrí la página con parámetros en la dirección, por ejemplo:
+   index.html?id=ID_DE_LA_PLANILLA&hoja=3erTRIM&titulo=4to%20B
+   ========================================================== */
+const CONFIG = {
+  id: "11joT9YMmrB6d1P9G0AuuuGsetXjmdX57oczMDH7Xa7M", // ID de la planilla (lo que va entre /d/ y /edit en el link)
+  hoja: "3erTRIM",                                   // nombre de la pestaña
+  columnas: "D,J,K,L,M,N,O,P,Q",                     // columna del nombre primero, después las notas
+  titulo: "4to B – 3er trimestre",
+  notaBaja: 6                                        // notas menores a este número se marcan en rojo
+};
+
+const p = new URLSearchParams(location.search);
+const cfg = {
+  id: p.get("id") || CONFIG.id,
+  hoja: p.get("hoja") || CONFIG.hoja,
+  columnas: p.get("columnas") || CONFIG.columnas,
+  titulo: p.get("titulo") || CONFIG.titulo,
+  notaBaja: Number(p.get("notaBaja") || CONFIG.notaBaja)
+};
+
+const $ = id => document.getElementById(id);
+$("titulo").textContent = cfg.titulo;
+document.title = cfg.titulo;
+
+async function cargar() {
+  $("estado").hidden = false;
+  $("estado").textContent = "Cargando notas…";
+  $("sub").textContent = "Cargando…";
+
+  // headers=1: la fila 1 se usa como encabezado (act01, act02…)
+  const consulta = "select " + cfg.columnas;
+  const url = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(cfg.id) +
+    "/gviz/tq?tqx=out:json&headers=1&sheet=" + encodeURIComponent(cfg.hoja) +
+    "&tq=" + encodeURIComponent(consulta) + "&_=" + Date.now();
+
+  try {
+    const texto = await (await fetch(url)).text();
+    const datos = JSON.parse(texto.slice(texto.indexOf("{"), texto.lastIndexOf("}") + 1));
+    if (datos.status === "error") throw new Error(datos.errors?.[0]?.detailed_message || "error");
+    mostrar(datos.table);
+  } catch (e) {
+    $("tabla").hidden = true;
+    $("estado").hidden = false;
+    $("estado").textContent = "No se pudieron cargar las notas. Revisá que la planilla esté compartida como “Cualquier persona con el enlace”.";
+    $("sub").textContent = "";
+  }
+}
+
+function valor(c) {
+  if (!c || c.v === null || c.v === undefined || c.v === "") return "";
+  return String(c.f ?? c.v).trim();
+}
+
+function mostrar(t) {
+  const cab = $("cabecera");
+  cab.innerHTML = "";
+  t.cols.forEach((col, i) => {
+    const th = document.createElement("th");
+    th.textContent = (col.label || col.id).trim();
+    if (i === 0) th.className = "nombre";
+    cab.appendChild(th);
+  });
+
+  const cuerpo = $("cuerpo");
+  cuerpo.innerHTML = "";
+  // slice(1): se saltea la fila 2 de la planilla
+  t.rows.slice(1).forEach(r => {
+    const celdas = r.c || [];
+    const nombre = valor(celdas[0]);
+    if (!nombre) return;
+    const tr = document.createElement("tr");
+    tr.dataset.nombre = nombre.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    t.cols.forEach((_, i) => {
+      const td = document.createElement("td");
+      const v = valor(celdas[i]);
+      if (i === 0) { td.className = "nombre"; td.textContent = nombre; }
+      else if (v === "") { td.className = "vacio"; td.textContent = "–"; }
+      else {
+        td.textContent = v;
+        const n = parseFloat(v.replace(",", "."));
+        if (!isNaN(n) && n < cfg.notaBaja) td.className = "bajo";
+      }
+      tr.appendChild(td);
+    });
+    cuerpo.appendChild(tr);
+  });
+
+  $("estado").hidden = true;
+  $("tabla").hidden = false;
+  const ahora = new Date().toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+  $("sub").textContent = cuerpo.children.length + " alumnos · actualizado " + ahora;
+  filtrar();
+}
+
+function filtrar() {
+  const q = $("buscar").value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  for (const tr of $("cuerpo").children) {
+    tr.hidden = q && !tr.dataset.nombre.includes(q);
+  }
+}
+
+$("buscar").addEventListener("input", filtrar);
+$("recargar").addEventListener("click", cargar);
+cargar();
+</script>
+</body>
+</html>
