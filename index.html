@@ -17,40 +17,77 @@
     --empty: #fdebd8;
     --empty-text: #b45309;
     --low: #c2410c;
+    --ok: #15803d;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  header { padding: 14px 14px 8px; }
-  h1 { font-size: 1.15rem; margin: 0 0 4px; }
-  .sub { font-size: .8rem; color: var(--muted); }
-  .tools { display: flex; gap: 8px; padding: 0 14px 10px; }
-  #buscar { flex: 1; min-width: 0; font-size: 1rem; padding: 10px 12px; border: 1px solid var(--line);
-    border-radius: 10px; background: var(--card); }
-  button { font-size: .95rem; padding: 10px 14px; white-space: nowrap; border: 0; border-radius: 10px;
-    background: var(--head); color: var(--head-text); }
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px; }
+
+  header { padding: 16px 16px 8px; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  .sub { font-size: .85rem; color: var(--muted); }
+
+  .tools { position: sticky; top: 0; z-index: 5; background: var(--bg);
+    display: flex; gap: 8px; padding: 8px 16px 10px; }
+  #buscar { flex: 1; min-width: 0; font-size: 1.05rem; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+  button { font: inherit; cursor: pointer; }
+  .btn { font-size: .95rem; padding: 12px 14px; border: 0; border-radius: 12px;
+    background: var(--head); color: var(--head-text); white-space: nowrap; }
+  .vista { display: flex; justify-content: flex-end; padding: 0 16px 8px; }
+  .link { background: none; border: 0; color: var(--head); font-size: .95rem;
+    font-weight: 600; padding: 8px 4px; text-decoration: underline; }
+
+  .estado { padding: 28px 16px; text-align: center; color: var(--muted); }
+
+  /* ---------- Vista lista + tarjetas ---------- */
+  #lista { list-style: none; margin: 0; padding: 0 12px 24px; }
+  #lista li { background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; margin-bottom: 8px; overflow: hidden; }
+  .fila { display: flex; align-items: center; gap: 10px; width: 100%;
+    min-height: 56px; padding: 12px 14px; background: none; border: 0;
+    text-align: left; color: var(--text); }
+  .fila .nom { flex: 1; font-size: 1.05rem; font-weight: 600; line-height: 1.25; }
+  .fila .res { font-size: .85rem; color: var(--muted); white-space: nowrap; }
+  .fila .flecha { color: var(--muted); transition: transform .2s; font-size: .9rem; }
+  .fila[aria-expanded="true"] .flecha { transform: rotate(180deg); }
+  .fila[aria-expanded="true"] { background: var(--name-bg); }
+
+  .detalle { padding: 12px 12px 14px; border-top: 1px solid var(--line); }
+  .grilla { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .nota { border: 1px solid var(--line); border-radius: 10px; padding: 8px 4px;
+    text-align: center; background: #fafbfc; }
+  .nota .et { display: block; font-size: .8rem; color: var(--muted); }
+  .nota .v { display: block; font-size: 1.4rem; font-weight: 700; margin-top: 2px; }
+  .nota.vacio { background: var(--empty); border-color: #f6d3ae; }
+  .nota.vacio .v { color: var(--empty-text); }
+  .nota.bajo .v { color: var(--low); }
+  .pie { margin-top: 10px; font-size: .95rem; color: var(--muted); text-align: center; }
+  .pie b { color: var(--text); }
+
+  /* ---------- Vista tabla ---------- */
   .wrap { margin: 0 8px 16px; background: var(--card); border: 1px solid var(--line);
-    border-radius: 12px; overflow: auto; max-height: calc(100vh - 140px);
+    border-radius: 12px; overflow: auto; max-height: calc(100vh - 150px);
     -webkit-overflow-scrolling: touch; }
-  table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: .95rem; }
-  th, td { padding: 7px 6px; border-bottom: 1px solid var(--line); text-align: center;
-    white-space: nowrap; min-width: 42px; }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 1rem; }
+  th, td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: center;
+    white-space: nowrap; min-width: 46px; }
   thead th { position: sticky; top: 0; z-index: 2; background: var(--head);
-    color: var(--head-text); font-weight: 600; font-size: .8rem; }
+    color: var(--head-text); font-weight: 600; font-size: .9rem; }
   th.nombre, td.nombre { position: sticky; left: 0; text-align: left; z-index: 1;
     width: 44vw; min-width: 44vw; max-width: 44vw; white-space: normal;
-    line-height: 1.15; padding: 6px 8px; }
-  td.nombre { background: var(--name-bg); font-weight: 600; font-size: .8rem;
+    line-height: 1.2; padding: 8px 10px; }
+  td.nombre { background: var(--name-bg); font-weight: 600; font-size: .95rem;
     border-right: 1px solid var(--line); overflow-wrap: anywhere; }
-  @media (min-width: 700px) {
-    th.nombre, td.nombre { width: auto; min-width: 220px; max-width: 320px; }
-    td.nombre { font-size: .95rem; }
-  }
   thead th.nombre { z-index: 3; }
   td.vacio { background: var(--empty); color: var(--empty-text); }
   td.bajo { color: var(--low); font-weight: 700; }
-  tbody tr:nth-child(even) td:not(.nombre):not(.vacio) { background: #fafbfc; }
-  .estado { padding: 24px 14px; text-align: center; color: var(--muted); }
+  @media (min-width: 700px) {
+    th.nombre, td.nombre { width: auto; min-width: 240px; max-width: 340px; }
+    #lista { max-width: 640px; margin: 0 auto; }
+  }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -61,13 +98,20 @@
 </header>
 
 <div class="tools">
-  <input id="buscar" type="search" placeholder="Buscar alumno…" autocomplete="off">
-  <button id="recargar" type="button">↻ Actualizar notas</button>
+  <input id="buscar" type="search" placeholder="Escribí tu nombre…" autocomplete="off">
+  <button id="recargar" class="btn" type="button">↻ Actualizar notas</button>
 </div>
 
-<div class="wrap">
-  <div class="estado" id="estado">Cargando notas…</div>
-  <table id="tabla" hidden>
+<div class="vista">
+  <button id="cambiarVista" class="link" type="button">Ver como tabla</button>
+</div>
+
+<div class="estado" id="estado">Cargando notas…</div>
+
+<ul id="lista" hidden></ul>
+
+<div class="wrap" id="vistaTabla" hidden>
+  <table>
     <thead><tr id="cabecera"></tr></thead>
     <tbody id="cuerpo"></tbody>
   </table>
@@ -100,24 +144,37 @@ const $ = id => document.getElementById(id);
 $("titulo").textContent = cfg.titulo;
 document.title = cfg.titulo;
 
+// Guardado local (último alumno abierto y vista elegida). Si el navegador no lo permite, se ignora.
+const clave = "notas:" + cfg.id + ":" + cfg.hoja + ":";
+const guardar = (k, v) => { try { v == null ? localStorage.removeItem(clave + k) : localStorage.setItem(clave + k, v); } catch (e) {} };
+const leer = k => { try { return localStorage.getItem(clave + k); } catch (e) { return null; } };
+
+let alumnos = [];      // [{nombre, clave, notas:[{et, v}]}]
+let actividades = [];  // ["act01", ...]
+let abierto = leer("abierto");
+let vista = leer("vista") || (window.innerWidth >= 700 ? "tabla" : "tarjetas");
+let ultimaCarga = 0;
+
+const sinTildes = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+const esBaja = v => { const n = parseFloat(String(v).replace(",", ".")); return !isNaN(n) && n < cfg.notaBaja; };
+
 async function cargar() {
-  $("estado").hidden = false;
-  $("estado").textContent = "Cargando notas…";
+  ultimaCarga = Date.now();
   $("sub").textContent = "Cargando…";
+  if (!alumnos.length) { $("estado").hidden = false; $("estado").textContent = "Cargando notas…"; }
 
   // headers=1: la fila 1 se usa como encabezado (act01, act02…)
-  const consulta = "select " + cfg.columnas;
   const url = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(cfg.id) +
     "/gviz/tq?tqx=out:json&headers=1&sheet=" + encodeURIComponent(cfg.hoja) +
-    "&tq=" + encodeURIComponent(consulta) + "&_=" + Date.now();
+    "&tq=" + encodeURIComponent("select " + cfg.columnas) + "&_=" + Date.now();
 
   try {
     const texto = await (await fetch(url)).text();
     const datos = JSON.parse(texto.slice(texto.indexOf("{"), texto.lastIndexOf("}") + 1));
-    if (datos.status === "error") throw new Error(datos.errors?.[0]?.detailed_message || "error");
-    mostrar(datos.table);
+    if (datos.status === "error") throw new Error("error");
+    procesar(datos.table);
+    mostrar();
   } catch (e) {
-    $("tabla").hidden = true;
     $("estado").hidden = false;
     $("estado").textContent = "No se pudieron cargar las notas. Revisá que la planilla esté compartida como “Cualquier persona con el enlace”.";
     $("sub").textContent = "";
@@ -129,60 +186,160 @@ function valor(c) {
   return String(c.f ?? c.v).trim();
 }
 
-function mostrar(t) {
+function procesar(t) {
+  actividades = t.cols.slice(1).map(col => (col.label || col.id).trim());
+  alumnos = [];
+  // slice(1): se saltea la fila 2 de la planilla
+  t.rows.slice(1).forEach(r => {
+    const c = r.c || [];
+    const nombre = valor(c[0]);
+    if (!nombre) return;
+    alumnos.push({
+      nombre,
+      clave: sinTildes(nombre),
+      notas: actividades.map((et, i) => ({ et, v: valor(c[i + 1]) }))
+    });
+  });
+}
+
+function mostrar() {
+  $("estado").hidden = true;
+  const ahora = new Date().toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+  $("sub").textContent = alumnos.length + " alumnos · actualizado " + ahora;
+  armarLista();
+  armarTabla();
+  aplicarVista();
+  filtrar();
+}
+
+/* ---------- Lista con tarjetas ---------- */
+function armarLista() {
+  const ul = $("lista");
+  ul.innerHTML = "";
+  alumnos.forEach((a, i) => {
+    const entregadas = a.notas.filter(n => n.v !== "").length;
+    const li = document.createElement("li");
+    li.dataset.clave = a.clave;
+
+    const fila = document.createElement("button");
+    fila.type = "button";
+    fila.className = "fila";
+    fila.setAttribute("aria-expanded", "false");
+    fila.setAttribute("aria-controls", "det" + i);
+    fila.innerHTML = '<span class="nom"></span><span class="res"></span><span class="flecha">▼</span>';
+    fila.querySelector(".nom").textContent = a.nombre;
+    fila.querySelector(".res").textContent = entregadas + "/" + a.notas.length;
+
+    const det = document.createElement("div");
+    det.className = "detalle";
+    det.id = "det" + i;
+    det.hidden = true;
+    const grilla = document.createElement("div");
+    grilla.className = "grilla";
+    a.notas.forEach(n => {
+      const d = document.createElement("div");
+      d.className = "nota" + (n.v === "" ? " vacio" : esBaja(n.v) ? " bajo" : "");
+      d.innerHTML = '<span class="et"></span><span class="v"></span>';
+      d.querySelector(".et").textContent = n.et;
+      d.querySelector(".v").textContent = n.v === "" ? "–" : n.v;
+      grilla.appendChild(d);
+    });
+    const pie = document.createElement("div");
+    pie.className = "pie";
+    pie.innerHTML = "Entregó <b>" + entregadas + "</b> de <b>" + a.notas.length + "</b> actividades";
+    det.append(grilla, pie);
+
+    fila.addEventListener("click", () => alternar(li));
+    li.append(fila, det);
+    ul.appendChild(li);
+
+    if (abierto && a.nombre === abierto) abrir(li, false);
+  });
+  if (abierto && vista === "tarjetas") {
+    const li = [...ul.children].find(li => li.querySelector(".nom").textContent === abierto);
+    if (li) setTimeout(() => li.scrollIntoView({ block: "start", behavior: "smooth" }), 50);
+  }
+}
+
+function abrir(li, desplazar = true) {
+  for (const otro of $("lista").children) if (otro !== li) cerrar(otro);
+  li.querySelector(".fila").setAttribute("aria-expanded", "true");
+  li.querySelector(".detalle").hidden = false;
+  abierto = li.querySelector(".nom").textContent;
+  guardar("abierto", abierto);
+  if (desplazar) {
+    const r = li.getBoundingClientRect();
+    if (r.bottom > window.innerHeight || r.top < 70) li.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+}
+function cerrar(li) {
+  li.querySelector(".fila").setAttribute("aria-expanded", "false");
+  li.querySelector(".detalle").hidden = true;
+}
+function alternar(li) {
+  if (li.querySelector(".fila").getAttribute("aria-expanded") === "true") {
+    cerrar(li); abierto = null; guardar("abierto", null);
+  } else abrir(li);
+}
+
+/* ---------- Tabla ---------- */
+function armarTabla() {
   const cab = $("cabecera");
   cab.innerHTML = "";
-  t.cols.forEach((col, i) => {
+  ["Alumno", ...actividades].forEach((t, i) => {
     const th = document.createElement("th");
-    th.textContent = i === 0 ? "Alumno" : (col.label || col.id).trim();
+    th.textContent = t;
     if (i === 0) th.className = "nombre";
     cab.appendChild(th);
   });
-
   const cuerpo = $("cuerpo");
   cuerpo.innerHTML = "";
-  // slice(1): se saltea la fila 2 de la planilla
-  t.rows.slice(1).forEach(r => {
-    const celdas = r.c || [];
-    const nombre = valor(celdas[0]);
-    if (!nombre) return;
+  alumnos.forEach(a => {
     const tr = document.createElement("tr");
-    tr.dataset.nombre = nombre.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-    t.cols.forEach((_, i) => {
+    tr.dataset.clave = a.clave;
+    const td0 = document.createElement("td");
+    td0.className = "nombre";
+    td0.textContent = a.nombre;
+    tr.appendChild(td0);
+    a.notas.forEach(n => {
       const td = document.createElement("td");
-      const v = valor(celdas[i]);
-      if (i === 0) { td.className = "nombre"; td.textContent = nombre; }
-      else if (v === "") { td.className = "vacio"; td.textContent = "–"; }
-      else {
-        td.textContent = v;
-        const n = parseFloat(v.replace(",", "."));
-        if (!isNaN(n) && n < cfg.notaBaja) td.className = "bajo";
-      }
+      if (n.v === "") { td.className = "vacio"; td.textContent = "–"; }
+      else { td.textContent = n.v; if (esBaja(n.v)) td.className = "bajo"; }
       tr.appendChild(td);
     });
     cuerpo.appendChild(tr);
   });
+}
 
-  $("estado").hidden = true;
-  $("tabla").hidden = false;
-  const ahora = new Date().toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
-  $("sub").textContent = cuerpo.children.length + " alumnos · actualizado " + ahora;
-  filtrar();
+/* ---------- Vista, búsqueda y recarga ---------- */
+function aplicarVista() {
+  if (!alumnos.length) return;
+  $("lista").hidden = vista !== "tarjetas";
+  $("vistaTabla").hidden = vista !== "tabla";
+  $("cambiarVista").textContent = vista === "tabla" ? "Ver por alumno" : "Ver como tabla";
 }
 
 function filtrar() {
-  const q = $("buscar").value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
-  for (const tr of $("cuerpo").children) {
-    tr.hidden = q && !tr.dataset.nombre.includes(q);
+  const q = sinTildes($("buscar").value);
+  const visibles = [];
+  for (const el of [...$("lista").children, ...$("cuerpo").children]) {
+    el.hidden = q && !el.dataset.clave.includes(q);
+  }
+  // Si la búsqueda deja un solo alumno, se abre su tarjeta
+  if (q) {
+    const quedan = [...$("lista").children].filter(li => !li.hidden);
+    if (quedan.length === 1) abrir(quedan[0], false);
   }
 }
 
 $("buscar").addEventListener("input", filtrar);
 $("recargar").addEventListener("click", () => cargar());
+$("cambiarVista").addEventListener("click", () => {
+  vista = vista === "tabla" ? "tarjetas" : "tabla";
+  guardar("vista", vista);
+  aplicarVista();
+});
 // Recarga sola al volver a la pestaña o a la app (si pasó más de 1 minuto)
-let ultimaCarga = 0;
-const _cargar = cargar;
-cargar = async () => { ultimaCarga = Date.now(); await _cargar(); };
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && Date.now() - ultimaCarga > 60000) cargar();
 });
