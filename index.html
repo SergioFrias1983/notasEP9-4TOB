@@ -137,7 +137,7 @@
 
 <script>
 /* Versión de la página: se cambia en cada actualización */
-const VERSION = "1.9";
+const VERSION = "2.0";
 const FECHA_VERSION = "21/11/2026";
 
 /* ===================== CONFIGURACIÓN =====================
@@ -324,7 +324,13 @@ function cerrar(li) {
 function alternar(li) {
   if (li.querySelector(".fila").getAttribute("aria-expanded") === "true") {
     cerrar(li); abierto = null; guardar("abierto", null);
-  } else abrir(li);
+  } else abrirYRegistrar(li);
+}
+// Abre la tarjeta y anota en la bitácora qué alumno se vio (solo si no estaba abierta)
+function abrirYRegistrar(li, desplazar = true) {
+  const yaAbierta = li.querySelector(".fila").getAttribute("aria-expanded") === "true";
+  abrir(li, desplazar);
+  if (!yaAbierta) registrar("Tarjeta", li.querySelector(".nom").textContent).catch(() => {});
 }
 
 /* ---------- Tabla ---------- */
@@ -376,7 +382,7 @@ function filtrar() {
   // Si la búsqueda deja un solo alumno, se abre su tarjeta
   if (q) {
     const quedan = [...$("lista").children].filter(li => !li.hidden);
-    if (quedan.length === 1) abrir(quedan[0], false);
+    if (quedan.length === 1) abrirYRegistrar(quedan[0], false);
   }
 }
 
@@ -398,11 +404,12 @@ document.addEventListener("visibilitychange", () => {
 cargar();
 
 /* ---------- Registro en la hoja VISTAS: un renglón por cada visita o toque en "Actualizar notas" ---------- */
-function registrar(accion) {
+function registrar(accion, alumno) {
   if (!cfg.contador) return Promise.resolve(null);
   const disp = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "Celular" : "Computadora";
   return fetch(cfg.contador + "?pagina=" + encodeURIComponent(cfg.pagina) +
-    "&accion=" + encodeURIComponent(accion) + "&disp=" + encodeURIComponent(disp));
+    "&accion=" + encodeURIComponent(accion) + "&disp=" + encodeURIComponent(disp) +
+    (alumno ? "&alumno=" + encodeURIComponent(alumno) : ""));
 }
 
 /* ---------- Contador de visitas (suma 1 en la hoja VISTAS cada vez que se abre la página) ---------- */
