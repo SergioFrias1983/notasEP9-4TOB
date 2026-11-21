@@ -137,7 +137,7 @@
 
 <script>
 /* Versión de la página: se cambia en cada actualización */
-const VERSION = "1.8";
+const VERSION = "1.9";
 const FECHA_VERSION = "21/11/2026";
 
 /* ===================== CONFIGURACIÓN =====================
@@ -384,7 +384,7 @@ $("buscar").addEventListener("input", filtrar);
 $("recargar").addEventListener("click", () => {
   cargar();
   // Registra el toque en "Actualizar notas" en la hoja VISTAS (renglón aparte)
-  if (cfg.contador) fetch(cfg.contador + "?pagina=" + encodeURIComponent(cfg.pagina + " · Actualizar notas")).catch(() => {});
+  registrar("Actualizar notas").catch(() => {});
 });
 $("cambiarVista").addEventListener("click", () => {
   vista = vista === "tabla" ? "tarjetas" : "tabla";
@@ -397,9 +397,17 @@ document.addEventListener("visibilitychange", () => {
 });
 cargar();
 
+/* ---------- Registro en la hoja VISTAS: un renglón por cada visita o toque en "Actualizar notas" ---------- */
+function registrar(accion) {
+  if (!cfg.contador) return Promise.resolve(null);
+  const disp = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "Celular" : "Computadora";
+  return fetch(cfg.contador + "?pagina=" + encodeURIComponent(cfg.pagina) +
+    "&accion=" + encodeURIComponent(accion) + "&disp=" + encodeURIComponent(disp));
+}
+
 /* ---------- Contador de visitas (suma 1 en la hoja VISTAS cada vez que se abre la página) ---------- */
 if (cfg.contador) {
-  fetch(cfg.contador + "?pagina=" + encodeURIComponent(cfg.pagina))
+  registrar("Visita")
     .then(r => r.json())
     .then(d => {
       if (d && d.visitas != null) {
