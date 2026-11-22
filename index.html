@@ -102,6 +102,9 @@
     #lista { max-width: 640px; margin: 0 auto; }
   }
   .version { text-align: center; font-size: .75rem; color: var(--muted); padding: 4px 16px 20px; }
+  .cartel { margin: 0 12px 10px; padding: 12px 14px; border-radius: 12px;
+    background: #e8f1fb; border: 1px solid #bcd0e6; color: #1e3a5f;
+    font-size: .98rem; line-height: 1.35; text-align: center; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -124,6 +127,8 @@
 
 <div class="estado" id="estado">Cargando notas…</div>
 
+<div class="cartel" id="cartel" hidden>👆 Selecciona el nombre o busca el nombre del alumno para ver el detalle de las notas</div>
+
 <ul id="lista" hidden></ul>
 
 <div class="wrap" id="vistaTabla" hidden>
@@ -137,8 +142,8 @@
 
 <script>
 /* Versión de la página: se cambia en cada actualización */
-const VERSION = "2.0";
-const FECHA_VERSION = "21/11/2026";
+const VERSION = "2.1";
+const FECHA_VERSION = "22/11/2026";
 
 /* ===================== CONFIGURACIÓN =====================
    Para usar esta página con otra planilla, cambiá estos valores,
@@ -369,6 +374,7 @@ function armarTabla() {
 function aplicarVista() {
   if (!alumnos.length) return;
   $("lista").hidden = vista !== "tarjetas";
+  $("cartel").hidden = vista !== "tarjetas";
   $("vistaTabla").hidden = vista !== "tabla";
   $("cambiarVista").textContent = vista === "tabla" ? "Ver por alumno" : "Ver como tabla";
 }
