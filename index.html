@@ -142,8 +142,8 @@
 
 <script>
 /* Versión de la página: se cambia en cada actualización */
-const VERSION = "2.1";
-const FECHA_VERSION = "22/11/2026";
+const VERSION = "2.2";
+const FECHA_VERSION = "25/11/2026";
 
 /* ===================== CONFIGURACIÓN =====================
    Para usar esta página con otra planilla, cambiá estos valores,
@@ -156,7 +156,8 @@ const CONFIG = {
   nombre: "D",                                       // columna del nombre
   promedio: "G",                                     // columna del promedio (Nota de carpeta). Dejar "" si no hay
   tituloPromedio: "Nota de carpeta",
-  columnas: "J,K,L,M,N,O,P,Q",                       // columnas de las actividades
+  columnas: "auto",                                  // "auto" = las columnas entre "ci" y "cf" de la fila 2
+  columnasRespaldo: "J,K,L,M,N,O,P,Q",                // se usan solo si no se encuentran "ci" y "cf"
   titulo: "4to B – 3er trimestre",
   notaBaja: 6,                                       // notas menores a este número se marcan en rojo
   contador: "https://script.google.com/macros/s/AKfycbx3V67Z9Ri4LLpJzsgfQcsWptr2T6baLGg20tV9JGK0b5NyWaXr2wCjpQmcMR_0UKudiA/exec",                                    // link de la aplicación web de Apps Script (hoja VISTAS). Vacío = sin contador
@@ -201,12 +202,13 @@ async function cargar() {
   $("sub").textContent = "Cargando…";
   if (!alumnos.length) { $("estado").hidden = false; $("estado").textContent = "Cargando notas…"; }
 
-  // headers=1: la fila 1 se usa como encabezado (act01, act02…)
-  const url = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(cfg.id) +
-    "/gviz/tq?tqx=out:json&headers=1&sheet=" + encodeURIComponent(cfg.hoja) +
-    "&tq=" + encodeURIComponent("select " + [cfg.nombre, cfg.promedio, cfg.columnas].filter(Boolean).join(",")) + "&_=" + Date.now();
-
   try {
+    // Columnas de actividades: fijas, o detectadas entre "ci" y "cf" (se buscan cada vez)
+    const columnas = cfg.columnas === "auto" ? await detectarColumnas() : cfg.columnas;
+
+    // headers=1: la fila 1 se usa como encabezado (act01, act02…)
+    const url = baseGviz() + "&headers=1&tq=" +
+      encodeURIComponent("select " + [cfg.nombre, cfg.promedio, columnas].filter(Boolean).join(",")) + "&_=" + Date.now();
     const texto = await (await fetch(url)).text();
     const datos = JSON.parse(texto.slice(texto.indexOf("{"), texto.lastIndexOf("}") + 1));
     if (datos.status === "error") throw new Error("error");
@@ -216,6 +218,31 @@ async function cargar() {
     $("estado").hidden = false;
     $("estado").textContent = "No se pudieron cargar las notas. Revisá que la planilla esté compartida como “Cualquier persona con el enlace”.";
     $("sub").textContent = "";
+  }
+}
+
+function baseGviz() {
+  return "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(cfg.id) +
+    "/gviz/tq?tqx=out:json&" + (/^[0-9]+$/.test(cfg.hoja) ? "gid=" : "sheet=") + encodeURIComponent(cfg.hoja);
+}
+
+/* Lee las filas 1 y 2 y devuelve las columnas que están entre "ci" y "cf"
+   (solo las que tienen nombre en la fila 1, por ejemplo act01, act02…) */
+async function detectarColumnas() {
+  try {
+    const texto = await (await fetch(baseGviz() + "&headers=0&range=A1:ZZ2&_=" + Date.now())).text();
+    const t = JSON.parse(texto.slice(texto.indexOf("{"), texto.lastIndexOf("}") + 1)).table;
+    const f1 = t.rows[0].c, f2 = t.rows[1].c;
+    const marca = (fila, i) => valor(fila[i]).toLowerCase();
+    const ini = t.cols.findIndex((_, i) => marca(f2, i) === "ci");
+    const fin = t.cols.findIndex((_, i) => i > ini && marca(f2, i) === "cf");
+    if (ini === -1 || fin === -1) throw new Error("sin ci/cf");
+    const cols = [];
+    for (let i = ini + 1; i < fin; i++) if (valor(f1[i])) cols.push(t.cols[i].id);
+    if (!cols.length) throw new Error("sin actividades");
+    return cols.join(",");
+  } catch (e) {
+    return CONFIG.columnasRespaldo;
   }
 }
 
